@@ -19,12 +19,15 @@ public class Users {
         this.users = new HashMap<>();
     }
     
-    public void addUser(User u) throws UserException{
-       // if (this.users.containsKey(u.getMail())) throw new UserException("User com o mail "+u.getMail()+ " já existe!");
+    public synchronized void addUser(User u) {
         this.users.put(u.getMail(), u);
     }
     
-    public boolean autentification(String pass, String mail) throws UserException{
+    public boolean userExists(String mail){
+         return(this.users.containsKey(mail));
+    }
+    
+    public synchronized boolean autentification(String pass, String mail) throws UserException{
         if(!(this.users.containsKey(mail))) throw new UserException("User com o mail "+mail+ " não existe!");
         User u = this.users.get(mail);
         return(u.autentification(pass));
@@ -33,5 +36,13 @@ public class Users {
     public User getUser(String mail){
         User u =this.users.get(mail);
         return u;
+    }
+    
+    public String toString(){
+        StringBuilder s = new StringBuilder("Clientes:\n");
+        for(User u: this.users.values()){
+            s.append(u);
+        }
+        return s.toString();
     }
 }
