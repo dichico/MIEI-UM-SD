@@ -31,12 +31,22 @@ public class ServerWorker implements Runnable {
             this.out = new ObjectOutputStream(this.socket.getOutputStream());
         } catch (IOException ex) {
             Logger.getLogger(ServerWorker.class.getName()).log(Level.SEVERE, null, ex);
+        }       
+    }
+    
+    public void close(){
+        try {
+            this.socket.shutdownInput();
+            this.socket.shutdownOutput();
+            this.socket.close();
+        } catch (IOException ex) {
+            Logger.getLogger(ServerWorker.class.getName()).log(Level.SEVERE, null, ex);
         }
-            
     }
     
     public void registar(){
         try {
+            
             String name = (String) in.readObject();
             boolean flag = this.users.userExists(name);
             
@@ -50,9 +60,27 @@ public class ServerWorker implements Runnable {
             String pass = (String) in.readObject();
             User u = new User(name,pass);
             this.users.addUser(u);
-        } catch (IOException ex) {
+            
+        } catch (IOException | ClassNotFoundException ex) {
             Logger.getLogger(ServerWorker.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (ClassNotFoundException ex) {
+        }
+    }
+    
+    public void login(){
+        try {
+            String name = (String) this.in.readObject();
+            String pass = (String) this.in.readObject();
+            
+            boolean flag = this.users.autentification(pass,name);
+            
+            this.out.writeObject(flag);
+            while(!flag){
+                name = (String) this.in.readObject();
+                pass = (String) this.in.readObject();
+                flag = this.users.autentification(pass,name);
+                this.out.writeObject(flag);
+            }
+        } catch (IOException | ClassNotFoundException ex) {
             Logger.getLogger(ServerWorker.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -61,17 +89,23 @@ public class ServerWorker implements Runnable {
     public void run() {
         try {
   
-            String value =(String) in.readObject();
-            switch(value){
-                case "1":
-                    registar();
-                    break;
+            String value ="hello";
+            while(!(value.equals("3"))){
+                value =(String) in.readObject();
+                switch(value){
+                    case "1":
+                        registar();
+                        break;
+                    case "2":
+                        login();
+                        break;
+                }
+               
             }
-                       
-        } catch (IOException ex) {
-            Logger.getLogger(ServerWorker.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (ClassNotFoundException ex) {
+                      
+        } catch (IOException | ClassNotFoundException ex) {
             Logger.getLogger(ServerWorker.class.getName()).log(Level.SEVERE, null, ex);
         }
+         close();
     }   
 }

@@ -44,33 +44,17 @@ public class Client {
         }
     }
     
-    public void clientStart(){
-        try {
-            System.out.println("### CLIENT ###");
-
-            inicializing();
-            String value = "hello";
-            while(!(value.equals("3"))){
-                mainMenu();
-                System.out.print("> ");
-                value = (String) this.systemIn.readLine();
-                switch(value){
-                    case "1":
-                        registar();
-                        break;
-                        
-                }
-                
-            }
-        } catch (IOException ex) {
-            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
-        }
+    public void mainMenu(){
+        System.out.println("Escolha uma das opções (1 a 3):");
+        System.out.println("1.SIGN IN");
+        System.out.println("2.LOGIN");
+        System.out.println("3.SAIR");
     }
+    
     
     public void registar(){
         try {
-            out.writeObject("1");
-            
+            System.out.println("SIGN_IN");
             System.out.print("Escolha o seu nickname\n> ");
             
             String name = this.systemIn.readLine();
@@ -89,19 +73,69 @@ public class Client {
             String pass = this.systemIn.readLine();
             out.writeObject(pass);
             System.out.println("###User inserido com sucesso###");
-        } catch (IOException ex) {
-            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (ClassNotFoundException ex) {
+            // rederecionar para MENU de escolha de pacotes
+        } catch (IOException | ClassNotFoundException ex) {
             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     
-    public void mainMenu(){
-        System.out.println("Escolha uma das opções (1 a 3):");
-        System.out.println("1.SIGN IN");
-        System.out.println("2.LOGIN");
-        System.out.println("3.SAIR");
+
+    public void login(){
+        try {
+            
+            System.out.println("LOGIN");
+            System.out.print("Mail :\n> ");
+            String name = this.systemIn.readLine();
+            this.out.writeObject(name);
+            System.out.print("Password:\n> ");
+            String pass = this.systemIn.readLine();
+            this.out.writeObject(pass);
+            boolean flag = (Boolean) this.in.readObject();
+            while(!flag){
+                System.out.println("Credenciais de acesso erras\nTente novamente");
+                System.out.print("Mail :\n> ");
+                name = this.systemIn.readLine();
+                this.out.writeObject(name);
+                System.out.print("Password:\n> ");
+                pass = this.systemIn.readLine();
+                this.out.writeObject(pass);
+                flag = (Boolean) this.in.readObject();
+            }
+            System.out.println("Login efectuado com sucesso!");
+            // rederecionar para MENU de escolha de pacotes
+        } catch (IOException | ClassNotFoundException ex) {
+            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+        }
+                        
     }
+    
+    public void clientStart(){
+        try {
+            System.out.println("### CLIENT ###");
+
+            inicializing();
+            String value = "hello";
+            while(!(value.equals("3"))){
+                mainMenu();
+                System.out.print("> ");
+                value = (String) this.systemIn.readLine();
+                this.out.writeObject(value);
+                switch(value){
+                    case "1":
+                        registar();
+                        break;
+                    case "2":
+                        login();
+                        break;
+                }
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        close();
+    }
+    
+    
     
     public void close(){
         try {

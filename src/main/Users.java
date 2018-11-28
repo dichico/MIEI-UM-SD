@@ -27,10 +27,13 @@ public class Users {
          return(this.users.containsKey(mail));
     }
     
-    public synchronized boolean autentification(String pass, String mail) throws UserException{
-        if(!(this.users.containsKey(mail))) throw new UserException("User com o mail "+mail+ " não existe!");
-        User u = this.users.get(mail);
-        return(u.autentification(pass));
+    // rever
+    public boolean autentification(String pass, String mail) {
+        if((this.users.containsKey(mail))){
+            User u = this.users.get(mail);
+            return(u.autentification(pass));
+        }
+        else return false;
     }
     
     public User getUser(String mail){
