@@ -37,8 +37,8 @@ public class Server {
                 
                 System.out.println("SERVER > Connection received!");
                 
-             //   ServerWorker sw = new ServerWorker(socket,users);
-             //   new Thread(sw).start();
+                ServerWorker sw = new ServerWorker(socket,users);
+                new Thread(sw).start();
             }
         } catch (IOException ex) {
             ex.printStackTrace();

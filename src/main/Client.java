@@ -6,12 +6,10 @@
 package main;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -37,43 +35,10 @@ public class Client {
     
     public void inicializing(){
         try {
+            this.socket = new Socket(this.hostname,this.porto);
             this.out = new ObjectOutputStream(socket.getOutputStream());
             this.in = new ObjectInputStream(socket.getInputStream());
-        } catch (IOException ex) {
-            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-    
-    public void clientStart(){
-        try {
-            System.out.println("### CLIENT ###");
-            this.socket = new Socket(this.hostname,this.porto);
-            // abrir canais de leitura e escrita;
             this.systemIn = new BufferedReader(new InputStreamReader(System.in));
-            
-           // this.in = new ObjectInputStream(socket.getInputStream());
-	   // out = new ObjectOutputStream(socket.getOutputStream());
-            String value = "hello";
-            while(!(value.equals("3"))){
-                mainMenu();
-                System.out.print("> ");
-                value = (String) this.systemIn.readLine();
-                switch(value){
-                    case "1":
-                        System.out.print("Escolha o seu nickname\n> ");
-                        String name = this.systemIn.readLine();
-                        System.out.println(name); 
-                        // enviar para o server
-                        // receber codigo OK -> se existe ja o user na base ou NOT -> se 
-                        System.out.print("Insira password\n> ");
-                        String pass = this.systemIn.readLine();
-                        // enviar para o server
-                        // receber Mensagem de sucesso
-                        // sair
-                        break;
-                }
-                
-            }
         } catch (IOException ex) {
             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -85,6 +50,92 @@ public class Client {
         System.out.println("2.LOGIN");
         System.out.println("3.SAIR");
     }
+    
+    
+    public void registar(){
+        try {
+            System.out.println("SIGN_IN");
+            System.out.print("Escolha o seu nickname\n> ");
+            
+            String name = this.systemIn.readLine();
+            
+            out.writeObject(name);
+            
+            boolean flag = (Boolean) in.readObject();
+            
+            while(flag){
+                System.out.print("O user com nickname " +name+ " já existe. Escolha outro nickname\n> ");
+                name = this.systemIn.readLine();
+                out.writeObject(name);
+                flag =(Boolean) in.readObject();
+            }
+            System.out.print("Insira password\n> ");
+            String pass = this.systemIn.readLine();
+            out.writeObject(pass);
+            System.out.println("###User inserido com sucesso###");
+            // rederecionar para MENU de escolha de pacotes
+        } catch (IOException | ClassNotFoundException ex) {
+            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+
+    public void login(){
+        try {
+            
+            System.out.println("LOGIN");
+            System.out.print("Mail :\n> ");
+            String name = this.systemIn.readLine();
+            this.out.writeObject(name);
+            System.out.print("Password:\n> ");
+            String pass = this.systemIn.readLine();
+            this.out.writeObject(pass);
+            boolean flag = (Boolean) this.in.readObject();
+            while(!flag){
+                System.out.println("Credenciais de acesso erras\nTente novamente");
+                System.out.print("Mail :\n> ");
+                name = this.systemIn.readLine();
+                this.out.writeObject(name);
+                System.out.print("Password:\n> ");
+                pass = this.systemIn.readLine();
+                this.out.writeObject(pass);
+                flag = (Boolean) this.in.readObject();
+            }
+            System.out.println("Login efectuado com sucesso!");
+            // rederecionar para MENU de escolha de pacotes
+        } catch (IOException | ClassNotFoundException ex) {
+            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+        }
+                        
+    }
+    
+    public void clientStart(){
+        try {
+            System.out.println("### CLIENT ###");
+
+            inicializing();
+            String value = "hello";
+            while(!(value.equals("3"))){
+                mainMenu();
+                System.out.print("> ");
+                value = (String) this.systemIn.readLine();
+                this.out.writeObject(value);
+                switch(value){
+                    case "1":
+                        registar();
+                        break;
+                    case "2":
+                        login();
+                        break;
+                }
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        close();
+    }
+    
+    
     
     public void close(){
         try {
