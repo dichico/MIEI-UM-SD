@@ -1,4 +1,4 @@
-package teste;
+package principal_MESMO;
 
 import java.io.Serializable;
 import java.util.concurrent.locks.ReentrantLock;
@@ -19,10 +19,10 @@ public class Servidor implements Serializable {
     }
     
     public Servidor(String nome, double custoHora,int id){
+        this.lockServidor = new ReentrantLock();
         this.nome = nome;
         this.custoHora= custoHora;
         this.id = id;
-        this.lockServidor = new ReentrantLock();
     }
     
     public String getName() {

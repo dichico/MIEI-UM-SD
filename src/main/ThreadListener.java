@@ -9,9 +9,6 @@ package main;
  *
  * @author SarahTifanydaSilva
  */
-public class Testing {
+public class ThreadListener {
     
-    public static void main(String[] args) throws UserException{
-        
-    }
 }

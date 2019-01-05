@@ -1,4 +1,4 @@
-package main;
+package principal_MESMO;
 
 import java.io.Serializable;
 
@@ -7,20 +7,17 @@ public class User implements Serializable{
     private String mail;
     private String password;
     private double saldo;
-    private boolean ativo;
 
     public User() {
         this.mail="";
         this.password="";
         this.saldo = 0;
-        this.ativo = false;
     } 
     
     public User(String mail, String password,double saldo){
         this.mail = mail;
         this.password = password;
         this.saldo = saldo;
-        this.ativo = true;
     }
     
     
@@ -43,9 +40,6 @@ public class User implements Serializable{
         return this.saldo;
     }
     
-    public boolean getAtivo(){
-        return this.ativo;
-    }
     
     //Setters
     public void setMail(String mail){
@@ -59,19 +53,12 @@ public class User implements Serializable{
     public void setSaldo(double saldo){
         this.saldo = saldo;
     }
-
-    public void setAtivo(boolean flag){
-        this.ativo = flag;
-    }
     
     //retira saldo
     // caso custo a retirar seja maior que o saldo
+    
     public void retiraSaldo(double custo){
         this.saldo -= custo;
-    }
-    
-    public void depositaSaldo(double custo){
-        this.saldo +=custo;
     }
     
     //comparar passwords
@@ -85,7 +72,6 @@ public class User implements Serializable{
         s.append("Email: " +this.mail+"\n");
         s.append("Password: "+this.password+"\n");
         s.append("Saldo: "+this.saldo+"\n");
-        s.append("Ativo ?"+this.ativo+"\n");
         
         return s.toString();
     }    

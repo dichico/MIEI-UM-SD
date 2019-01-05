@@ -1,4 +1,4 @@
-package main;
+package principal_MESMO;
 
 import java.io.IOException;
 import java.net.ServerSocket;

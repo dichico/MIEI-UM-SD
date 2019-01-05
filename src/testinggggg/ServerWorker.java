@@ -1,4 +1,4 @@
-package main;
+package testinggggg;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -209,10 +209,10 @@ public class ServerWorker implements Runnable,Serializable {
             
             System.out.println(this.leilao);
             String mail = this.user.getMail();
+            
             this.leilao.addUser(mail, out);
             // enviei msg
-            this.leilao.multicast("User entrou no leilao", mail,false);
-
+            this.leilao.sendingMessage("User entrou no leilao", mail,false,false);
            
             String value = "ok";
             boolean flag = this.leilao.getTerminado();
@@ -221,10 +221,10 @@ public class ServerWorker implements Runnable,Serializable {
                 flag = this.leilao.getTerminado();
                 value = (String) this.in.readObject();
                 if (!value.equals("quit")&& !flag){    
-                    this.leilao.multicast(value, mail,true);
+                    this.leilao.sendingMessage(value, mail,true,false);
                 }
             }
-            //System.out.println(this.leilao);
+            
             this.out.flush();
         } catch (IOException | ClassNotFoundException ex) {
             System.err.println("Erro método leilao, classe ServerWorker " + ex.getMessage());
@@ -277,7 +277,6 @@ public class ServerWorker implements Runnable,Serializable {
         } catch (IOException | ClassNotFoundException ex) {
             System.err.println("Erro método run, classe ServerWorker " + ex.getMessage());
         }
-        
         close();
     }   
 }

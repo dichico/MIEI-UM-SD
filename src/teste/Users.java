@@ -1,6 +1,7 @@
 
-package main;
+package teste;
 
+import principal_MESMO.*;
 import java.util.HashMap;
 
 
@@ -12,43 +13,26 @@ public class Users {
         this.users = new HashMap<>();
     }
     
-    /**
-     * Método que regista um User-
-     * @param u User que pretende se registar.
-     */
     public synchronized void addUser(User u) {
         this.users.put(u.getMail(), u);
     }
     
-    /**
-     * Método que atualiza o saldo do useeer
-     * @param u 
-     */
-    public void updateConta(String mail, double custo){
-        User u1 = this.users.get(mail);
-        u1.depositaSaldo(custo);
+    public void updateConta(User u){
+        User u1 = this.users.get(u.getMail());
+        u1.setSaldo(u.getSaldo());
     }
-    
     
     public boolean userExists(String mail){
          return(this.users.containsKey(mail));
     }
     
-    public void setAtivo(String mail,boolean flag){
-        User u = this.users.get(mail);
-        u.setAtivo(flag);
-    }
-    
     // rever
-    public synchronized boolean autentification(String pass, String mail) {
+    public boolean autentification(String pass, String mail) {
         if((this.users.containsKey(mail))){
             User u = this.users.get(mail);
-            if (!(u.getAtivo())){
-                u.setAtivo(true);
-                return(u.autentification(pass));
-            }
+            return(u.autentification(pass));
         }
-        return false;
+        else return false;
     }
     
     public User getUser(String mail){

@@ -1,4 +1,4 @@
-package main;
+package testinggggg;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -21,7 +21,8 @@ public class Client implements Serializable{
     private ObjectInputStream in;
     private ObjectOutputStream out;
     private BufferedReader systemIn;
-    private boolean terminado;
+    private ClientListener clientListener;
+
     
     public Client(String hostname,int porto){
         this.hostname = hostname;
@@ -30,7 +31,8 @@ public class Client implements Serializable{
     
     public void inicializing(){
         try {
-            this.listener = new Thread(new ClientListener());    
+            this.listener = new Thread(new ClientListener());  
+            this.listener.setDaemon(true);
             this.socket = new Socket(this.hostname,this.porto);
             this.out = new ObjectOutputStream(socket.getOutputStream());
             this.in = new ObjectInputStream(socket.getInputStream());
@@ -152,20 +154,18 @@ public class Client implements Serializable{
     
     public void leilao(){
         try {
-            this.terminado = false; 
             listener.start();
             
             String msg;
             String value = "ok";
             System.out.println("Se pretender sair do leilao digit quit");
 
-            while(!value.equals("quit") && !terminado){
+            while(!value.equals("quit")){
                 System.out.print("> ");
                 value = this.systemIn.readLine();
                 this.out.writeObject(value);
             }
             System.out.println("Terminado Cliente");
-            terminado = true;
             this.out.flush();
          } catch (IOException ex ) {
             System.err.println("Erro método leilão, classe Client " + ex.getMessage());
@@ -285,6 +285,7 @@ public class Client implements Serializable{
             this.socket.shutdownOutput();
             this.socket.close();
             this.systemIn.close();
+            
         } catch (IOException ex) {
             System.err.println("Erro método close, classe Client " + ex.getMessage());
         }    
@@ -296,16 +297,38 @@ public class Client implements Serializable{
     }
     
     public class ClientListener implements Runnable {
+        private boolean terminado;
 	public ClientListener(){}
-		
+	
+        public synchronized void leilaoTerminado(){
+            while(terminado){
+                try {
+                    this.wait();
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }
+        
+        public synchronized void leilaoIniciado(){
+            System.out.println("Acordou!");
+            this.notify();
+        }
+        
         @Override
 	public void run(){
             String message;
+            
             try {
-                while(!((message = (String) in.readObject()) != null) ){
+                while(((message = (String) in.readObject())!= "quit") && !(terminado = (Boolean) in.readObject())){
                     System.out.println("");
+                    System.out.println(terminado);
                     System.out.println(message);
                     System.out.print("> ");
+                }
+                if (terminado){
+                    System.out.println("Thread Leilao Terminado");
+                    leilaoTerminado();
                 }
             }
             catch (SocketException e) {}

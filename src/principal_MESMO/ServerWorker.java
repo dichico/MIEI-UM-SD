@@ -1,4 +1,4 @@
-package main;
+package principal_MESMO;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -17,17 +17,15 @@ public class ServerWorker implements Runnable,Serializable {
     private Servidores normal;
     private Servidores micro;
     private Leilao leilao;
-    private User user;
     
     
-    public ServerWorker(Socket socket,Users users,Servidores large,Servidores normal, Servidores micro,Leilao leilao){
+    public ServerWorker(Socket socket,Users users,Servidores large,Servidores normal, Servidores micro, Leilao leilao){
         try {
             this.users = users;
             this.large = large;
             this.normal = normal;
             this.micro = micro;
             this.leilao = leilao;
-            this.user = new User();
             this.socket = socket;
             this.in = new ObjectInputStream(this.socket.getInputStream());
             this.out = new ObjectOutputStream(this.socket.getOutputStream());
@@ -46,11 +44,9 @@ public class ServerWorker implements Runnable,Serializable {
         }
     }
     
-    /**
-     * Método que permite registar um cliente.
-     */
     public void registar(){
         try {
+            
             String name = (String) in.readObject();
             boolean flag = this.users.userExists(name);
             
@@ -62,11 +58,11 @@ public class ServerWorker implements Runnable,Serializable {
                 out.writeObject(flag);
             }
             String pass = (String) in.readObject();
-            this.user = new User(name,pass,0);
-            this.users.addUser(this.user);
-            this.out.flush();
+            User u = new User(name,pass,0);
+            this.users.addUser(u);
+            
         } catch (IOException | ClassNotFoundException ex) {
-            System.err.println("Erro método registar, classe ServerWorker " + ex.getMessage());
+             System.err.println("Erro método registar, classe ServerWorker " + ex.getMessage());
         }
     }
     
@@ -86,8 +82,8 @@ public class ServerWorker implements Runnable,Serializable {
                 flag = this.users.autentification(pass,name);
                 this.out.writeObject(flag);
             }
-            this.user = this.users.getUser(name);
-            this.out.flush();
+            User u = this.users.getUser(name);
+            this.out.writeObject(u);
         } catch (IOException | ClassNotFoundException ex) {
              System.err.println("Erro método login, classe ServerWorker " + ex.getMessage());
         }
@@ -95,8 +91,8 @@ public class ServerWorker implements Runnable,Serializable {
     
     public void depositar(){
         try {
-            Double custo = (Double) this.in.readObject();
-            this.users.updateConta(this.user.getMail(), custo);
+            User u = (User) this.in.readObject();
+            this.users.updateConta(u);           
         } catch (IOException | ClassNotFoundException ex) {
             System.err.println("Erro método depositar, classe ServerWorker " + ex.getMessage());
         }
@@ -118,56 +114,33 @@ public class ServerWorker implements Runnable,Serializable {
                         depositar();
                         break;
                     case "4":
-                        consultar();
                         break;
                 }
             }     
-            this.users.setAtivo(this.user.getMail(), false);
         } catch (IOException | ClassNotFoundException ex) {
             System.err.println("Erro método secondMenu, classe ServerWorker " + ex.getMessage());
         }
     }
     
-    public void consultar(){
-        double custo = this.user.getSaldo();
-        try {
-            this.out.writeObject(custo);
-            this.out.flush();
-        } catch (IOException ex) {
-           System.err.println("Erro método consultar, classe ServerWorker " + ex.getMessage());
-        }
-    }
-    
     public void aluguer(String server){
-       Servidor s;
-       int id=0;
-       double custo = 0;
-       if (server.equals("large")){
-           custo = 1;
-           id = this.large.alugaServer("aluguer");
-       }
-       else if (server.equals("normal")){
-           custo = 0.9;
-           id = this.normal.alugaServer("aluguer");
-       }
-       else {
-           custo = 0.75;
-           id = this.micro.alugaServer("aluguer");
-       }
+        Servidor s;
+       if (server.equals("large"))  s = this.large.alugaServer();
+       else if (server.equals("normal")) s = this.normal.alugaServer();
+       else s = this.micro.alugaServer();
+       double custo = s.getCusto();
         try {
             this.out.writeObject(custo);
             String value ="ok";
             while(!value.equals("2")){
                 // Supondo que é 1h
                 Thread.sleep(3600);
-                this.user.retiraSaldo(custo);
                 this.out.writeObject("");
                 value = (String) this.in.readObject();
             }
-            if (server.equals("large")) this.large.libertaServidor(id,"aluguer");
-            else if (server.equals("normal")) this.normal.libertaServidor(id,"aluguer");
-            else this.micro.libertaServidor(id,"aluguer");
-            this.out.flush();
+            if (server.equals("large")) this.large.libertaServidor(s.getId());
+            else if (server.equals("normal")) this.normal.libertaServidor(s.getId());
+            else this.micro.libertaServidor(s.getId()); 
+
         } catch (IOException | InterruptedException | ClassNotFoundException ex) {
              System.err.println("Erro método aluguer, classe ServerWorker " + ex.getMessage());
         }
@@ -199,33 +172,24 @@ public class ServerWorker implements Runnable,Serializable {
     public void leilao(String server){
         
         try {
-            synchronized(this.leilao){
-                if (this.leilao.getTerminado()){
-                    this.leilao.setTerminado(false);
-                    Temporizador t = new Temporizador(this.leilao);
-                    t.start();
+            String mail = (String) this.in.readObject();  
+            this.leilao.addUser(mail, out);
+            this.leilao.multicast("User entrou no leilao", mail);
+            double max = 0;
+            String value = "ok";
+            while(!value.equals("quit")){
+                value = (String) this.in.readObject();
+                if (!(value.equals("quit"))){
+                    double valueD = Double.parseDouble(value);
+                    if (valueD>max){
+                        System.out.println(max);
+                        max = valueD;
+                        this.leilao.multicast(value, mail);
+                    }
+                    
                 }
             }
             
-            System.out.println(this.leilao);
-            String mail = this.user.getMail();
-            this.leilao.addUser(mail, out);
-            // enviei msg
-            this.leilao.multicast("User entrou no leilao", mail,false);
-
-           
-            String value = "ok";
-            boolean flag = this.leilao.getTerminado();
-
-            while(!value.equals("quit") && !flag){
-                flag = this.leilao.getTerminado();
-                value = (String) this.in.readObject();
-                if (!value.equals("quit")&& !flag){    
-                    this.leilao.multicast(value, mail,true);
-                }
-            }
-            //System.out.println(this.leilao);
-            this.out.flush();
         } catch (IOException | ClassNotFoundException ex) {
             System.err.println("Erro método leilao, classe ServerWorker " + ex.getMessage());
         }
@@ -237,17 +201,7 @@ public class ServerWorker implements Runnable,Serializable {
             String value ="ok";
             while(!(value.equals("4"))){
                 value =(String) in.readObject();
-                switch(value){
-                    case "1":
-                        leilao("large");
-                        break;
-                    case "2":
-                        leilao("normal");
-                        break;
-                    case "3":
-                        leilao("micro");
-                        break;
-                }
+            if(!(value.equals("4"))) leilao("large");
             }     
         } catch (IOException | ClassNotFoundException ex) {
              System.err.println("Erro método menuLeilao, classe ServerWorker " + ex.getMessage());
@@ -275,9 +229,8 @@ public class ServerWorker implements Runnable,Serializable {
             }
                       
         } catch (IOException | ClassNotFoundException ex) {
-            System.err.println("Erro método run, classe ServerWorker " + ex.getMessage());
+             System.err.println("Erro método run, classe ServerWorker " + ex.getMessage());
         }
-        
-        close();
+         close();
     }   
 }

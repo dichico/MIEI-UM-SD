@@ -1,5 +1,6 @@
-package main;
+package testinggggg;
 
+import main.*;
 import java.io.Serializable;
 
 public class User implements Serializable{

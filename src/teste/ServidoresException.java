@@ -3,18 +3,19 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package main;
+package teste;
 
 /**
  *
  * @author SarahTifanydaSilva
  */
-public class UserException extends Exception{
+public class ServidoresException extends Exception {
     
-    public UserException(){
+    public ServidoresException(){
         super();
     }
-    public UserException(String e){
-        super(e);
+    
+    public ServidoresException(String s){
+        super(s);
     }
 }

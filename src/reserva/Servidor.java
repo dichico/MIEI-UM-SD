@@ -1,5 +1,6 @@
-package teste;
+package reserva;
 
+import teste.*;
 import java.io.Serializable;
 import java.util.concurrent.locks.ReentrantLock;
 

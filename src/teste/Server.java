@@ -1,5 +1,6 @@
-package main;
+package teste;
 
+import principal_MESMO.*;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -13,17 +14,17 @@ public class Server {
     private Servidores large;
     private Servidores normal;
     private Servidores micro;
-    private Leilao leilao;
+    private Leiloes leiloes;
 
     
     public Server(int port){
         this.port = port;
         this.users = new Users();
-        this.large = new Servidores(3);
-        this.normal = new Servidores(3);
-        this.micro = new Servidores(3);
-        this.leilao = new Leilao();
-        for(int i=0;i<3;i++){
+        this.large = new Servidores(1);
+        this.normal = new Servidores(1);
+        this.micro = new Servidores(1);
+        this.leiloes = new Leiloes();
+        for(int i=0;i<1;i++){
             Servidor s1 = new Servidor("m5.large",1,i);
             Servidor s2 = new Servidor("p4.normal",0.90,i);
             Servidor s3 = new Servidor("t3.micro",0.75,i);           
@@ -46,7 +47,7 @@ public class Server {
                 System.out.println("SERVER > Connection received!");
                 
                 
-                ServerWorker sw = new ServerWorker(socket,users,large,normal,micro,leilao);
+                ServerWorker sw = new ServerWorker(socket,users,large,normal,micro,leiloes);
                 new Thread(sw).start();
             }
         } catch (IOException ex) {

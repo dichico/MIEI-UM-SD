@@ -1,28 +1,34 @@
-package teste;
+package testinggggg;
 
+import main.*;
 import java.io.Serializable;
-import java.util.concurrent.locks.ReentrantLock;
 
 
 public class Servidor implements Serializable {
    
     private String nome;
+    private String tipoAluguer;
     private double custoHora;
     private int id;
-    private ReentrantLock lockServidor;
+    private boolean lock;
 
     public Servidor() {
         this.nome="";
         this.custoHora=0;
         this.id =0;
-        this.lockServidor = new ReentrantLock();
+        this.lock = false;
     }
     
     public Servidor(String nome, double custoHora,int id){
+        this.lock = false;
         this.nome = nome;
         this.custoHora= custoHora;
         this.id = id;
-        this.lockServidor = new ReentrantLock();
+        this.tipoAluguer="";
+    }
+    
+    public String getTipoAluguer(){
+        return this.tipoAluguer;
     }
     
     public String getName() {
@@ -41,16 +47,22 @@ public class Servidor implements Serializable {
         this.id=i;
     }
     
-    public void lock(){
-        this.lockServidor.lock();
+    public void setTipoAluguer(String tipo){
+        this.tipoAluguer=tipo;
+    }
+    
+    public void lock(String tipo){
+        this.tipoAluguer = tipo;
+        this.lock = true;
     }
     
    public void unlock(){
-        this.lockServidor.unlock();
+        this.tipoAluguer ="";
+        this.lock = false;
     }
    
     public boolean isLocked(){
-        return (this.lockServidor.isLocked());
+        return (this.lock);
     }
     
     public String toString(){

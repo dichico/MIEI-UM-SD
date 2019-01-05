@@ -1,27 +1,24 @@
-package main;
+package teste1;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.net.Socket;
-import java.net.SocketException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import static principal_MESMO.Menus.*;
 
 
-public class Client implements Serializable{
-    private Thread listener;
+public class Client {
+    
     private Socket socket;
-    private final String hostname;
-    private final int porto;
+    private String hostname;
+    private int porto;
     private ObjectInputStream in;
     private ObjectOutputStream out;
     private BufferedReader systemIn;
-    private boolean terminado;
+    private User user;
     
     public Client(String hostname,int porto){
         this.hostname = hostname;
@@ -30,30 +27,39 @@ public class Client implements Serializable{
     
     public void inicializing(){
         try {
-            this.listener = new Thread(new ClientListener());    
             this.socket = new Socket(this.hostname,this.porto);
             this.out = new ObjectOutputStream(socket.getOutputStream());
             this.in = new ObjectInputStream(socket.getInputStream());
             this.systemIn = new BufferedReader(new InputStreamReader(System.in));
         } catch (IOException ex) {
-            System.err.println("Erro método inicializing, classe Client " + ex.getMessage());
+            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     
-   
-
-    /**
-     * Método que regista um user.
-     */
+    public void mainMenu(){
+        System.out.println("Escolha uma das opções (1 a 3):");
+        System.out.println("1.SIGN IN");
+        System.out.println("2.LOGIN");
+        System.out.println("3.SAIR");
+    }
+    
+    public void secondMenu(){
+        System.out.println("Escolha uma das opções (1 a 3):");
+        System.out.println("1.Alugar servidor");
+        System.out.println("2.Ir a leilão");
+        System.out.println("3.Depositar dinheiro");
+        System.out.println("4.Consultar conta");
+        System.out.println("5.SAIR");
+    }
+    
     public void registar(){
         try {
-            System.out.println("### SIGN_IN ###");
+            System.out.println("SIGN_IN");
             System.out.print("Insira o seu mail\n> ");
             
             String name = this.systemIn.readLine();
             
-            this.out.writeObject(name);
-            
+            out.writeObject(name);
             
             boolean flag = (Boolean) in.readObject();
             
@@ -66,11 +72,10 @@ public class Client implements Serializable{
             System.out.print("Insira password\n> ");
             String pass = this.systemIn.readLine();
             out.writeObject(pass);
-            System.out.println("### User inserido com sucesso ###");
-            
-            this.out.flush();
+            this.user = new User(name,pass,0);
+            System.out.println("###User inserido com sucesso###");
         } catch (IOException| ClassNotFoundException ex) {
-            System.err.println("Erro método registar, classe Client " + ex.getMessage());
+            Logger.getLogger (Client.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     
@@ -81,19 +86,17 @@ public class Client implements Serializable{
     public void login(){
         try {
             
-            System.out.println("### LOGIN ###");
+            System.out.println("LOGIN");
             System.out.print("Mail :\n> ");
             String name = this.systemIn.readLine();
             this.out.writeObject(name);
-            
             System.out.print("Password:\n> ");
             String pass = this.systemIn.readLine();
             this.out.writeObject(pass);
-            
             boolean flag = (Boolean) this.in.readObject();
             while(!flag){
-                System.out.println("Credenciais de acesso erradas ou User já fez login\nTente novamente");
-                System.out.print("Mail:\n> ");
+                System.out.println("Credenciais de acesso erras\nTente novamente");
+                System.out.print("Mail :\n> ");
                 name = this.systemIn.readLine();
                 this.out.writeObject(name);
                 System.out.print("Password:\n> ");
@@ -101,90 +104,71 @@ public class Client implements Serializable{
                 this.out.writeObject(pass);
                 flag = (Boolean) this.in.readObject();
             }
-            System.out.println("Login efetuado com sucesso!");
-            this.out.flush();
+            System.out.println("Login efectuado com sucesso!");
+            User u = (User) this.in.readObject();
+            this.user = u;
         } catch (IOException | ClassNotFoundException ex) {
-            System.err.println("Erro método login, classe Client " + ex.getMessage());
+            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
         }
                         
     }
     
-
+    public void presentigServers(){
+        System.out.println("Escolha o tipo de servidor que pretende (1 a 3)");
+        System.out.println("1.m5.large (1,00€/hora)");
+        System.out.println("2.p4.normal (0,90€/hora)");
+        System.out.println("3.t3.micro (0,75€/hora)");
+        System.out.println("4.SAIR");
+    }
     
     public void aluguer(){
         double custo;
         try {
             custo = (Double) in.readObject();
             System.out.println("Custo do server "+custo+ "€");
-            String value = "ok";
-            while(!value.equals("2")){
+            String value = "hello";
+            while(!value.equals("1")){
                 String s = (String) this.in.readObject();
-                System.out.println("Deseja continuar com o aluguer do servidor?");
+                this.user.retiraSaldo(custo);
+                System.out.println("Deseja cancelar o aluguer?");
                 System.out.println("1.Sim");
                 System.out.println("2.Não");
                 System.out.print(">");
                 value = (String) systemIn.readLine();
                 this.out.writeObject(value);
             }
-            this.out.flush();
+            
         } catch (IOException | ClassNotFoundException ex) {
-           System.err.println("Erro método aluguer, classe Client " + ex.getMessage());
+            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
         }
         
     }
     
     
     public void menuAluguer(){
-        try {       
-            String value ="ok";
-            while(!(value.equals("4"))){
-                presentigServers();
-                System.out.print("> ");
-                value = (String) this.systemIn.readLine();
-                this.out.writeObject(value);
-                
-                if (!(value.equals("4"))) aluguer();
-            }
-        } catch (IOException ex) {
-           System.err.println("Erro método menuAluguer, classe Client " + ex.getMessage());
-        }
-    }
-    
-    public void leilao(){
         try {
-            this.terminado = false; 
-            listener.start();
-            
-            String msg;
-            String value = "ok";
-            System.out.println("Se pretender sair do leilao digit quit");
-
-            while(!value.equals("quit") && !terminado){
-                System.out.print("> ");
-                value = this.systemIn.readLine();
-                this.out.writeObject(value);
-            }
-            System.out.println("Terminado Cliente");
-            terminado = true;
-            this.out.flush();
-         } catch (IOException ex ) {
-            System.err.println("Erro método leilão, classe Client " + ex.getMessage());
-        } 
-    }
-    
-    public void menuLeilao(){
-        try {           
-            String value ="ok";
+            System.out.println("### Tipos de servidores ###");
+        
+            String value ="hello";
             while(!(value.equals("4"))){
                 presentigServers();
                 System.out.print("> ");
                 value = (String) this.systemIn.readLine();
                 this.out.writeObject(value);
-                if(!(value.equals("4"))) leilao();
+                switch(value){
+                    case "1":
+                        aluguer();
+                        break;
+                    case "2":
+                        aluguer();
+                        break;
+                    case "3":
+                        aluguer();
+                        break;
+                }
             }
-            this.out.flush();
         } catch (IOException ex) {
-          System.err.println("Erro método menuLeilao, classe Client " + ex.getMessage());
+           Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     
@@ -193,11 +177,11 @@ public class Client implements Serializable{
             System.out.print(">");
             String value = this.systemIn.readLine();
             double valor = Double.parseDouble(value);
-            this.out.writeObject(valor);
+            this.user.setSaldo(valor);
+            this.out.writeObject(this.user);
             System.out.println("Saldo depositado com sucesso!");
-            this.out.flush();
         } catch (IOException ex) {
-            System.err.println("Erro método depositar, classe Client " + ex.getMessage());
+            ex.printStackTrace();
         }
     }
     
@@ -217,30 +201,21 @@ public class Client implements Serializable{
                         menuAluguer();
                         break;
                     case "2":
-                        menuLeilao();
                         break;
                     case "3":
                         depositar();
                         break;
                     case "4":
-                        consultar();
+                        System.out.println("Saldo: "+this.user.getSaldo()+"€");
                         break;
                 }
             }
-            this.out.flush();
         } catch (IOException ex) {
-           System.err.println("Erro método clientSecondMenu, classe Client " + ex.getMessage());
+           Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     
-    public void consultar(){
-        try {
-            double custo = (Double) this.in.readObject();
-            System.out.println("Saldo atual "+custo+"€");
-        } catch (IOException | ClassNotFoundException ex) {
-            System.err.println("Erro método consultar, classe Client " + ex.getMessage());
-        }
-    }
+    
     
     public void clientStart(){
         try {
@@ -265,13 +240,6 @@ public class Client implements Serializable{
                 }
             }
         } catch (IOException ex) {
-            System.err.println("Erro método clientStart, classe Client " + ex.getMessage());
-            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        try {
-            this.out.flush();
-        } catch (IOException ex) {
-            System.err.println("Erro método clientStart, classe Client " + ex.getMessage());
             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
         }
         close();
@@ -279,42 +247,20 @@ public class Client implements Serializable{
     
     
     
-    public void close() {
+    public void close(){
         try {
             this.socket.shutdownInput();
             this.socket.shutdownOutput();
             this.socket.close();
             this.systemIn.close();
         } catch (IOException ex) {
-            System.err.println("Erro método close, classe Client " + ex.getMessage());
+            ex.printStackTrace();
         }    
     }
     
     public static void main(String[] args){
         Client c = new Client("127.0.0.1",12345);
         c.clientStart();
+        
     }
-    
-    public class ClientListener implements Runnable {
-	public ClientListener(){}
-		
-        @Override
-	public void run(){
-            String message;
-            try {
-                while(!((message = (String) in.readObject()) != null) ){
-                    System.out.println("");
-                    System.out.println(message);
-                    System.out.print("> ");
-                }
-            }
-            catch (SocketException e) {}
-            catch (IOException e) {
-                e.printStackTrace();
-            } catch (ClassNotFoundException ex) {
-                Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
-            }
-	}
-    }
-
 }
