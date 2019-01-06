@@ -7,6 +7,8 @@ package main;
 
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -41,13 +43,13 @@ public class Servidores {
         this.lockServidores.lock();
         int id=-2;
         try{
-            while(tipoAluguer.equals("aluguer") && (this.counterA==this.servidores.length)){
+            while(tipoAluguer.equals("aluguer") && ((this.counterA+this.counterL)==this.servidores.length)){
                 this.occupied.await();
             }
             if (tipoAluguer.equals("leilao") && ((this.counterA+this.counterL)==this.servidores.length)) return -2;
-            if (tipoAluguer.equals("aluguer") &&(this.counterL > 0) && ((this.counterA+this.counterL)==this.servidores.length)){
+          /*  if (tipoAluguer.equals("aluguer") &&(this.counterL > 0) && ((this.counterA+this.counterL)==this.servidores.length)){
                 return -1;
-            }
+            }*/
             searchPos();
             Servidor s = this.servidores[this.proxPos];
             id = s.getId();
@@ -55,8 +57,8 @@ public class Servidores {
             
             if (tipoAluguer.equals("aluguer")){
                 this.counterA++;
-                System.out.println("Thread: " +Thread.currentThread().getName()+" ALUGA server "+s.getId());
-                System.out.println("Nº de Alugados "+this.counterA);
+               System.out.println("Thread: " +Thread.currentThread().getName()+" ALUGA server "+s.getId());
+               System.out.println("Nº de Alugados "+this.counterA);
                 
             }
             else {
@@ -66,7 +68,7 @@ public class Servidores {
             }
             return id;
         } catch (InterruptedException ex) {
-            System.err.println("Erro método alugaServer, classe Servidores" + ex.getMessage());
+           Logger.getLogger(ServerWorker.class.getName()).log(Level.SEVERE, null, ex);
         } finally{
             this.lockServidores.unlock();
         }
@@ -79,14 +81,14 @@ public class Servidores {
             Servidor s = this.servidores[i];
             if(tipoAluguer.equals("aluguer")){
                 this.counterA--;
-                System.out.println("Counter Alugados "+this.counterA);
+               // System.out.println("Counter Alugados "+this.counterA);
             }
             else {
                 this.counterL--;
-                System.out.println("Counter Leiloados "+this.counterL);
+               // System.out.println("Counter Leiloados "+this.counterL);
             }
             s.unlock();
-            System.out.println("Thread: " +Thread.currentThread().getName()+" LIBERTA server "+s.getId());
+            //System.out.println("Thread: " +Thread.currentThread().getName()+" LIBERTA server "+s.getId());
             
             this.proxPos = i;
             this.occupied.signalAll();
@@ -132,9 +134,6 @@ public class Servidores {
         }
         return flag;
     }
-    
-    
-
     
     @Override
     public String toString(){

@@ -38,7 +38,6 @@ public class Client implements Serializable{
             this.in = new ObjectInputStream(socket.getInputStream());
             this.systemIn = new BufferedReader(new InputStreamReader(System.in));
         } catch (IOException ex) {
-            System.err.println("Erro método inicializing, classe Client " + ex.getMessage());
             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -70,7 +69,6 @@ public class Client implements Serializable{
             System.out.println("### User inserido com sucesso ###");
             this.out.flush();
         } catch (IOException| ClassNotFoundException ex) {
-            System.err.println("Erro método registar, classe Client " + ex.getMessage());
             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -104,7 +102,6 @@ public class Client implements Serializable{
             else System.out.println("Login não efetuado com sucesso");
             this.out.flush();
         } catch (IOException | ClassNotFoundException ex) {
-            System.err.println("Erro método login, classe Client " + ex.getMessage());
             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
         }             
     }
@@ -121,7 +118,6 @@ public class Client implements Serializable{
             System.out.println("Saldo depositado com sucesso!");
             this.out.flush();
         } catch (IOException ex) {
-            System.err.println("Erro método depositar, classe Client " + ex.getMessage());
             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -133,7 +129,6 @@ public class Client implements Serializable{
             double custo = (Double) this.in.readObject();
             System.out.println("Saldo atual "+custo+"€");
         } catch (IOException | ClassNotFoundException ex) {
-            System.err.println("Erro método consultar, classe Client " + ex.getMessage());
             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -160,7 +155,6 @@ public class Client implements Serializable{
             this.out.writeObject(user.getMail());
             this.out.flush();
         } catch (IOException | ClassNotFoundException ex) {
-           System.err.println("Erro método aluguer, classe Client " + ex.getMessage());
            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -197,7 +191,6 @@ public class Client implements Serializable{
             }
             this.out.flush();
         } catch (IOException ex) {
-           System.err.println("Erro método clientSecondMenu, classe Client " + ex.getMessage());
            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -214,7 +207,6 @@ public class Client implements Serializable{
                 if (!(value.equals("4"))) aluguer();
             }
         } catch (IOException ex) {
-           System.err.println("Erro método menuAluguer, classe Client " + ex.getMessage());
            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -249,7 +241,6 @@ public class Client implements Serializable{
             }
             this.out.flush();
         } catch (IOException | ClassNotFoundException ex ) {
-            System.err.println("Erro método leilão, classe Client " + ex.getMessage());
             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -266,7 +257,6 @@ public class Client implements Serializable{
             }
             this.out.flush();
         } catch (IOException ex) {
-          System.err.println("Erro método menuLeilao, classe Client " + ex.getMessage());
           Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -296,7 +286,6 @@ public class Client implements Serializable{
             this.out.flush();
             close();
         } catch (IOException ex) {
-            System.err.println("Erro método clientStart, classe Client " + ex.getMessage());
             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -310,7 +299,7 @@ public class Client implements Serializable{
             this.socket.close();
             this.systemIn.close();
         } catch (IOException ex) {
-            System.err.println("Erro método close, classe Client " + ex.getMessage());
+           Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
         }    
     }
     

@@ -37,7 +37,7 @@ public class ServerWorker implements Runnable,Serializable {
             this.in = new ObjectInputStream(this.socket.getInputStream());
             this.out = new ObjectOutputStream(this.socket.getOutputStream());
         } catch (IOException ex) {
-             System.err.println("Erro construtor ServerWorker, classe ServerWorker " + ex.getMessage());
+            Logger.getLogger(ServerWorker.class.getName()).log(Level.SEVERE, null, ex);
         }       
     }
        
@@ -47,7 +47,7 @@ public class ServerWorker implements Runnable,Serializable {
             this.socket.shutdownOutput();
             this.socket.close();
         } catch (IOException ex) {
-             System.err.println("Erro método close, classe ServerWorker " + ex.getMessage());
+            Logger.getLogger(ServerWorker.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     
@@ -72,7 +72,7 @@ public class ServerWorker implements Runnable,Serializable {
             addUser(mail,pass);
             this.out.flush();
         } catch (IOException | ClassNotFoundException ex) {
-            System.err.println("Erro método registar, classe ServerWorker " + ex.getMessage());
+            Logger.getLogger(ServerWorker.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     
@@ -94,10 +94,9 @@ public class ServerWorker implements Runnable,Serializable {
                 this.out.writeObject(flag);
                 System.out.println(flag);
             }
-            System.out.println("Login acabado");
             this.out.flush();
         } catch (IOException | ClassNotFoundException ex) {
-             System.err.println("Erro método login, classe ServerWorker " + ex.getMessage());
+            Logger.getLogger(ServerWorker.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
  
@@ -108,7 +107,7 @@ public class ServerWorker implements Runnable,Serializable {
             String mail = (String) this.in.readObject();
             this.users.depositaConta(mail, custo);
         } catch (IOException | ClassNotFoundException ex) {
-            System.err.println("Erro método depositar, classe ServerWorker " + ex.getMessage());
+            Logger.getLogger(ServerWorker.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     
@@ -162,7 +161,7 @@ public class ServerWorker implements Runnable,Serializable {
             else this.micro.libertaServidor(id,"aluguer");
             this.out.flush();
         } catch (IOException | InterruptedException | ClassNotFoundException ex) {
-             System.err.println("Erro método aluguer, classe ServerWorker " + ex.getMessage());
+            Logger.getLogger(ServerWorker.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     
@@ -191,7 +190,7 @@ public class ServerWorker implements Runnable,Serializable {
                 }
             }  
         } catch (IOException | ClassNotFoundException ex) {
-            System.err.println("Erro método secondMenu, classe ServerWorker " + ex.getMessage());
+            Logger.getLogger(ServerWorker.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
        
@@ -213,7 +212,7 @@ public class ServerWorker implements Runnable,Serializable {
                 }
             }     
         } catch (IOException | ClassNotFoundException ex) {
-            System.err.println("Erro método menuAluguer,classe ServerWorker " + ex.getMessage());
+            Logger.getLogger(ServerWorker.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     
@@ -278,7 +277,6 @@ public class ServerWorker implements Runnable,Serializable {
                 this.out.flush();
             }
         } catch (IOException | ClassNotFoundException | InterruptedException ex) {
-            System.err.println("Erro método leilao, classe ServerWorker " + ex.getMessage());
             Logger.getLogger(ServerWorker.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -342,7 +340,6 @@ public class ServerWorker implements Runnable,Serializable {
                 this.out.flush();
             }
         } catch (IOException | ClassNotFoundException | InterruptedException ex) {
-            System.err.println("Erro método leilao, classe ServerWorker " + ex.getMessage());
             Logger.getLogger(ServerWorker.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -407,7 +404,6 @@ public class ServerWorker implements Runnable,Serializable {
                 this.out.flush();
             }
         } catch (IOException | ClassNotFoundException | InterruptedException ex) {
-            System.err.println("Erro método leilao, classe ServerWorker " + ex.getMessage());
             Logger.getLogger(ServerWorker.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -431,7 +427,7 @@ public class ServerWorker implements Runnable,Serializable {
                 }
             }     
         } catch (IOException | ClassNotFoundException ex) {
-             System.err.println("Erro método menuLeilao, classe ServerWorker " + ex.getMessage());
+            Logger.getLogger(ServerWorker.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     
@@ -455,7 +451,7 @@ public class ServerWorker implements Runnable,Serializable {
             }
             close();           
         } catch (IOException | ClassNotFoundException ex) {
-            System.err.println("Erro método run, classe ServerWorker " + ex.getMessage());
+            Logger.getLogger(ServerWorker.class.getName()).log(Level.SEVERE, null, ex);
         }
     }   
 }

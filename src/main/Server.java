@@ -3,6 +3,8 @@ package main;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 public class Server {
@@ -54,7 +56,7 @@ public class Server {
                 new Thread(sw).start();
             }
         } catch (IOException ex) {
-            System.err.println("Erro método startServer classe Server " + ex.getMessage());
+            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     

@@ -77,14 +77,14 @@ public class Leilao implements Serializable {
      * @param value 
      */
     public synchronized void multicastWinner(){
-        String value = "Parabéns! Conseguiu alugar o servidor por "+this.custoMaior+"€/hora";
+        String value = "Parabéns! Conseguiu alugar o servidor por "+this.custoMaior+"€/hora\nDigite quit";
 	try {
             ObjectOutputStream bw = this.usersWriters.get(mailUser);
             bw.writeObject(value);
             bw.writeObject(false);
             bw.flush();
         } catch (IOException e) {
-            System.err.println("Erro método multicastMsg, classe Leilao " + e.getMessage());
+            Logger.getLogger(Leilao.class.getName()).log(Level.SEVERE, null, e);  
         }
     }   
     
@@ -107,7 +107,6 @@ public class Leilao implements Serializable {
                 }
             }
         } catch (IOException ex) {
-            System.err.println("Erro método multicast, classe Leilao " + ex.getMessage());
             Logger.getLogger(Leilao.class.getName()).log(Level.SEVERE, null, ex);   
         }
     }
@@ -124,7 +123,6 @@ public class Leilao implements Serializable {
                     bw.flush();
             }
         } catch (IOException ex) {
-            System.err.println("Erro método multicast, classe Leilao " + ex.getMessage());
             Logger.getLogger(Leilao.class.getName()).log(Level.SEVERE, null, ex);   
         }
     }      
@@ -133,7 +131,7 @@ public class Leilao implements Serializable {
     public void terminaLeilao(){
         if(!(this.usersWriters.isEmpty())){
             multicastWinner();
-            this.sendingMessage("Leilão terminado! Não consegui alugar o servidor", mailUser, false,false);
+            this.sendingMessage("Leilão terminado! Não consegui alugar o servidor\nDigite quit!", mailUser, false,false);
             this.sendingMessage2("quit",true);
         }
     }
