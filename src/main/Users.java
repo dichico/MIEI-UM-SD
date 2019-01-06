@@ -39,6 +39,7 @@ public class Users {
         User u = this.getUser(mail);
         return u.getSaldo();
     }
+    
     public synchronized boolean userExists(String mail){
          return(this.users.containsKey(mail));
     }
