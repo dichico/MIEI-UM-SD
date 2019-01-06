@@ -5,6 +5,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.net.Socket;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 
@@ -16,18 +18,21 @@ public class ServerWorker implements Runnable,Serializable {
     private Servidores large;
     private Servidores normal;
     private Servidores micro;
-    private Leilao leilao;
-    private User user;
+    private Leilao leilaoLarge;
+    private Leilao leilaoNormal;
+    private Leilao leilaoMicro;
+
     
     
-    public ServerWorker(Socket socket,Users users,Servidores large,Servidores normal, Servidores micro,Leilao leilao){
+    public ServerWorker(Socket socket,Users users,Servidores large,Servidores normal, Servidores micro,Leilao lLarge,Leilao lNormal,Leilao lMicro){
         try {
             this.users = users;
             this.large = large;
             this.normal = normal;
             this.micro = micro;
-            this.leilao = leilao;
-            this.user = new User();
+            this.leilaoLarge = lLarge;
+            this.leilaoNormal = lNormal;
+            this.leilaoMicro = lMicro;
             this.socket = socket;
             this.in = new ObjectInputStream(this.socket.getInputStream());
             this.out = new ObjectOutputStream(this.socket.getOutputStream());
@@ -46,24 +51,25 @@ public class ServerWorker implements Runnable,Serializable {
         }
     }
     
-    /**
-     * Método que permite registar um cliente.
-     */
+    public synchronized void addUser(String mail,String pass){
+        this.users.addUser(mail, pass);
+    }
+    
+
     public void registar(){
         try {
-            String name = (String) in.readObject();
-            boolean flag = this.users.userExists(name);
+            String mail = (String) in.readObject();
+            boolean flag = this.users.userExists(mail);
             
             out.writeObject(flag);
 
             while(flag){
-                name = (String) in.readObject();
-                flag = this.users.userExists(name);
+                mail = (String) in.readObject();
+                flag = this.users.userExists(mail);
                 out.writeObject(flag);
             }
             String pass = (String) in.readObject();
-            this.user = new User(name,pass,0);
-            this.users.addUser(this.user);
+            addUser(mail,pass);
             this.out.flush();
         } catch (IOException | ClassNotFoundException ex) {
             System.err.println("Erro método registar, classe ServerWorker " + ex.getMessage());
@@ -71,75 +77,57 @@ public class ServerWorker implements Runnable,Serializable {
     }
     
   
-    
+
     public void login(){
         try {
             String name = (String) this.in.readObject();
             String pass = (String) this.in.readObject();
             
             boolean flag = this.users.autentification(pass,name);
-            
+
             this.out.writeObject(flag);
+
             while(!flag){
                 name = (String) this.in.readObject();
                 pass = (String) this.in.readObject();
                 flag = this.users.autentification(pass,name);
                 this.out.writeObject(flag);
+                System.out.println(flag);
             }
-            this.user = this.users.getUser(name);
+            System.out.println("Login acabado");
             this.out.flush();
         } catch (IOException | ClassNotFoundException ex) {
              System.err.println("Erro método login, classe ServerWorker " + ex.getMessage());
         }
     }
+ 
     
     public void depositar(){
         try {
             Double custo = (Double) this.in.readObject();
-            this.users.updateConta(this.user.getMail(), custo);
+            String mail = (String) this.in.readObject();
+            this.users.depositaConta(mail, custo);
         } catch (IOException | ClassNotFoundException ex) {
             System.err.println("Erro método depositar, classe ServerWorker " + ex.getMessage());
         }
     }
     
-    public void secondMenu(){
-         try {
-            String value ="ok";
-            while(!(value.equals("5"))){
-                value =(String) in.readObject();
-                switch(value){
-                    case "1":
-                        menuAluguer();
-                        break;
-                    case "2":
-                        menuLeilao();
-                        break;
-                    case "3":
-                        depositar();
-                        break;
-                    case "4":
-                        consultar();
-                        break;
-                }
-            }     
-            this.users.setAtivo(this.user.getMail(), false);
-        } catch (IOException | ClassNotFoundException ex) {
-            System.err.println("Erro método secondMenu, classe ServerWorker " + ex.getMessage());
-        }
-    }
-    
     public void consultar(){
-        double custo = this.user.getSaldo();
         try {
-            this.out.writeObject(custo);
-            this.out.flush();
-        } catch (IOException ex) {
-           System.err.println("Erro método consultar, classe ServerWorker " + ex.getMessage());
+            String mail = (String) in.readObject();
+            double custo = this.users.getSaldo(mail);
+            try {
+                this.out.writeObject(custo);
+                this.out.flush();
+            } catch (IOException ex) {
+                System.err.println("Erro método consultar, classe ServerWorker " + ex.getMessage());
+            }
+        } catch (IOException | ClassNotFoundException ex) {
+            Logger.getLogger(ServerWorker.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     
     public void aluguer(String server){
-       Servidor s;
        int id=0;
        double custo = 0;
        if (server.equals("large")){
@@ -155,15 +143,20 @@ public class ServerWorker implements Runnable,Serializable {
            id = this.micro.alugaServer("aluguer");
        }
         try {
+            double custoTotal = 0;
+            this.out.writeObject(server);
             this.out.writeObject(custo);
             String value ="ok";
             while(!value.equals("2")){
                 // Supondo que é 1h
                 Thread.sleep(3600);
-                this.user.retiraSaldo(custo);
+                custoTotal+=custo;
                 this.out.writeObject("");
                 value = (String) this.in.readObject();
             }
+            this.out.writeObject(custoTotal);
+            String mail = (String) this.in.readObject();
+            this.users.retiraConta(mail, custoTotal);
             if (server.equals("large")) this.large.libertaServidor(id,"aluguer");
             else if (server.equals("normal")) this.normal.libertaServidor(id,"aluguer");
             else this.micro.libertaServidor(id,"aluguer");
@@ -173,6 +166,35 @@ public class ServerWorker implements Runnable,Serializable {
         }
     }
     
+    public void secondMenu(){
+         try {
+            String value ="ok";
+            while(!(value.equals("6"))){
+                value =(String) in.readObject();
+                switch(value){
+                    case "1":
+                        menuAluguer();
+                        break;
+                    case "2":
+                        menuLeilao();
+                        break;
+                    case "3":
+                        depositar();
+                        break;
+                    case "4":
+                        consultar();
+                        break;
+                    case "5":
+                        String mail = (String) in.readObject();
+                        this.users.setAtivo(mail,false);
+                        value = "6";
+                }
+            }  
+        } catch (IOException | ClassNotFoundException ex) {
+            System.err.println("Erro método secondMenu, classe ServerWorker " + ex.getMessage());
+        }
+    }
+       
     public void menuAluguer(){
         try {
             String value ="ok";
@@ -196,38 +218,197 @@ public class ServerWorker implements Runnable,Serializable {
     }
     
    
-    public void leilao(String server){
-        
+   
+    public void leilaoLarge(){
+        int id = 0;
+        int alugou = -3;
         try {
-            synchronized(this.leilao){
-                if (this.leilao.getTerminado()){
-                    this.leilao.setTerminado(false);
-                    Temporizador t = new Temporizador(this.leilao);
-                    t.start();
+            synchronized(this){
+                if (this.leilaoLarge.getTerminado()){
+                    id = this.large.alugaServer("leilao");
+                    if(id!=-2) {
+                        this.leilaoLarge.setTerminado(false);
+                        Temporizador t = new Temporizador(this.leilaoLarge);
+                        t.start();
+                    }
                 }
             }
-            
-            System.out.println(this.leilao);
-            String mail = this.user.getMail();
-            this.leilao.addUser(mail, out);
-            // enviei msg
-            this.leilao.multicast("User entrou no leilao", mail,false);
-
+            if (id==-2) this.out.writeObject(true);
+            else {
+                this.out.writeObject(false);
+                String mail = (String) this.in.readObject();
+                
+                this.leilaoLarge.addUser(mail, out);
+                // enviei msg
+                this.leilaoLarge.sendingMessage("User entrou no leilao", mail,false,false);
            
-            String value = "ok";
-            boolean flag = this.leilao.getTerminado();
-
-            while(!value.equals("quit") && !flag){
-                flag = this.leilao.getTerminado();
-                value = (String) this.in.readObject();
-                if (!value.equals("quit")&& !flag){    
-                    this.leilao.multicast(value, mail,true);
+                String value = "ok";
+                boolean flag = this.leilaoLarge.getTerminado();
+                
+                while(!value.equals("quit") && !flag ){
+                    flag = this.leilaoLarge.getTerminado();
+                    value = (String) this.in.readObject();
+                    if (!value.equals("quit")&& !flag){    
+                        this.leilaoLarge.sendingMessage(value, mail,true,false);
+                    }
+                }
+                
+                mail = (String) in.readObject();
+                boolean winner = this.leilaoLarge.isWinner(mail);
+                double custoLeilao = this.leilaoLarge.getCusto();
+                this.leilaoLarge.removeUser(mail);
+                this.out.writeObject(winner);
+                if (winner){
+                    double custoTotal = 0;
+                    this.out.writeObject("large");
+                    this.out.writeObject(custoLeilao);
+                    String valor ="ok";
+                    while(!valor.equals("2")){
+                        // Supondo que é 1h
+                        Thread.sleep(3600);
+                        custoTotal+=custoLeilao;
+                        this.out.writeObject("");
+                        valor = (String) this.in.readObject();
+                    }
+                    this.out.writeObject(custoTotal);
+                    mail = (String) this.in.readObject();
+                    this.users.retiraConta(mail, custoTotal);
+                    this.large.libertaServidor(id, "leilao");
+                   }
+                this.out.flush();
+            }
+        } catch (IOException | ClassNotFoundException | InterruptedException ex) {
+            System.err.println("Erro método leilao, classe ServerWorker " + ex.getMessage());
+            Logger.getLogger(ServerWorker.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    public void leilaoNormal(){
+        int id = 0;
+        int alugou = -3;
+        try {
+            synchronized(this){
+                if (this.leilaoNormal.getTerminado()){
+                    id = this.normal.alugaServer("leilao");
+                    if(id!=-2) {
+                        this.leilaoNormal.setTerminado(false);
+                        Temporizador t = new Temporizador(this.leilaoNormal);
+                        t.start();
+                    }
                 }
             }
-            //System.out.println(this.leilao);
-            this.out.flush();
-        } catch (IOException | ClassNotFoundException ex) {
+            if (id==-2) this.out.writeObject(true);
+            else {
+                this.out.writeObject(false);
+                String mail = (String) this.in.readObject();
+                
+                this.leilaoNormal.addUser(mail, out);
+                // enviei msg
+                this.leilaoNormal.sendingMessage("User entrou no leilao", mail,false,false);
+           
+                String value = "ok";
+                boolean flag = this.leilaoNormal.getTerminado();
+                
+                while(!value.equals("quit") && !flag ){
+                    flag = this.leilaoNormal.getTerminado();
+                    value = (String) this.in.readObject();
+                    if (!value.equals("quit")&& !flag){    
+                        this.leilaoNormal.sendingMessage(value, mail,true,false);
+                    }
+                }
+                
+                mail = (String) in.readObject();
+                boolean winner = this.leilaoNormal.isWinner(mail);
+                double custoLeilao = this.leilaoNormal.getCusto();
+                this.leilaoNormal.removeUser(mail);
+                this.out.writeObject(winner);
+                if (winner){
+                    double custoTotal = 0;
+                    this.out.writeObject("normal");
+                    this.out.writeObject(custoLeilao);
+                    String valor ="ok";
+                    while(!valor.equals("2")){
+                        // Supondo que é 1h
+                        Thread.sleep(3600);
+                        custoTotal+=custoLeilao;
+                        this.out.writeObject("");
+                        valor = (String) this.in.readObject();
+                    }
+                    this.out.writeObject(custoTotal);
+                    mail = (String) this.in.readObject();
+                    this.users.retiraConta(mail, custoTotal);
+                    this.normal.libertaServidor(id, "leilao");
+                }
+                this.out.flush();
+            }
+        } catch (IOException | ClassNotFoundException | InterruptedException ex) {
             System.err.println("Erro método leilao, classe ServerWorker " + ex.getMessage());
+            Logger.getLogger(ServerWorker.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    
+     public void leilaoMicro(){
+        int id = 0;
+        int alugou = -3;
+        try {
+            synchronized(this){
+                if (this.leilaoMicro.getTerminado()){
+                    id = this.micro.alugaServer("leilao");
+                    if(id!=-2) {
+                        this.leilaoMicro.setTerminado(false);
+                        Temporizador t = new Temporizador(this.leilaoMicro);
+                        t.start();
+                    }
+                }
+            }
+            if (id==-2) this.out.writeObject(true);
+            else {
+                this.out.writeObject(false);
+                String mail = (String) this.in.readObject();
+                
+                this.leilaoMicro.addUser(mail, out);
+                // enviei msg
+                this.leilaoMicro.sendingMessage("User entrou no leilao", mail,false,false);
+           
+                String value = "ok";
+                boolean flag = this.leilaoMicro.getTerminado();
+                
+                while(!value.equals("quit") && !flag ){
+                    flag = this.leilaoMicro.getTerminado();
+                    value = (String) this.in.readObject();
+                    if (!value.equals("quit")&& !flag){    
+                        this.leilaoMicro.sendingMessage(value, mail,true,false);
+                    }
+                }
+                
+                mail = (String) in.readObject();
+                boolean winner = this.leilaoMicro.isWinner(mail);
+                double custoLeilao = this.leilaoMicro.getCusto();
+                this.leilaoMicro.removeUser(mail);
+                this.out.writeObject(winner);
+                if (winner){
+                    this.out.writeObject("micro");
+                    double custoTotal = 0;
+                    this.out.writeObject(custoLeilao);
+                    String valor ="ok";
+                    while(!valor.equals("2")){
+                        // Supondo que é 1h
+                        Thread.sleep(3600);
+                        custoTotal+=custoLeilao;
+                        this.out.writeObject("");
+                        valor = (String) this.in.readObject();
+                    }
+                    this.out.writeObject(custoTotal);
+                    mail = (String) this.in.readObject();
+                    this.users.retiraConta(mail, custoTotal);
+                    this.micro.libertaServidor(id, "leilao");
+                }
+                this.out.flush();
+            }
+        } catch (IOException | ClassNotFoundException | InterruptedException ex) {
+            System.err.println("Erro método leilao, classe ServerWorker " + ex.getMessage());
+            Logger.getLogger(ServerWorker.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     
@@ -239,13 +420,13 @@ public class ServerWorker implements Runnable,Serializable {
                 value =(String) in.readObject();
                 switch(value){
                     case "1":
-                        leilao("large");
+                        leilaoLarge();
                         break;
                     case "2":
-                        leilao("normal");
+                        leilaoNormal();
                         break;
                     case "3":
-                        leilao("micro");
+                        leilaoMicro();
                         break;
                 }
             }     
@@ -254,10 +435,10 @@ public class ServerWorker implements Runnable,Serializable {
         }
     }
     
+    
     @Override
     public void run() {
         try {
-  
             String value ="ok";
             while(!(value.equals("3"))){
                 value =(String) in.readObject();
@@ -271,13 +452,10 @@ public class ServerWorker implements Runnable,Serializable {
                         secondMenu();
                         break;
                 }
-               
             }
-                      
+            close();           
         } catch (IOException | ClassNotFoundException ex) {
             System.err.println("Erro método run, classe ServerWorker " + ex.getMessage());
         }
-        
-        close();
     }   
 }

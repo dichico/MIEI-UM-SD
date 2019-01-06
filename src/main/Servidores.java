@@ -13,12 +13,13 @@ import java.util.concurrent.locks.ReentrantLock;
  * @author SarahTifanydaSilva
  */
 public class Servidores {
-    private Servidor[] servidores;
-    private ReentrantLock lockServidores;   // Lock para o servidores
-    private Condition occupied;             // Condição para quando todos os servidores estiverem alugados
-    private int counterA;                    // Nº de servidores alugados
-    private int counterL;
-    private int proxPos;                    // Próximo servidor a ser alugado
+    private Servidor[] servidores;              // Array com servidores para alugar e leiloar.
+    private ReentrantLock lockServidores;       // Lock para o servidores
+    private Condition occupied;                 // Condição para quando todos os servidores estiverem alugados
+    private int counterA;                       // Nº de servidores alugados
+    private int counterL;                       // Nº de servidores leiloados
+    private int proxPos;                        // Próximo servidor a ser alugado
+
     
     public Servidores(int n){
         this.servidores = new Servidor[n];
@@ -38,25 +39,31 @@ public class Servidores {
     
     public int alugaServer(String tipoAluguer){
         this.lockServidores.lock();
-        int id=-1;
+        int id=-2;
         try{
-            while(this.counterA==this.servidores.length){
+            while(tipoAluguer.equals("aluguer") && (this.counterA==this.servidores.length)){
                 this.occupied.await();
+            }
+            if (tipoAluguer.equals("leilao") && ((this.counterA+this.counterL)==this.servidores.length)) return -2;
+            if (tipoAluguer.equals("aluguer") &&(this.counterL > 0) && ((this.counterA+this.counterL)==this.servidores.length)){
+                return -1;
             }
             searchPos();
             Servidor s = this.servidores[this.proxPos];
             id = s.getId();
             s.lock(tipoAluguer);
-            System.out.println("Thread: " +Thread.currentThread().getName()+" ALUGA server "+s.getId());
+            
             if (tipoAluguer.equals("aluguer")){
-                System.out.println("Nº de Alugados "+this.counterA);
                 this.counterA++;
+                System.out.println("Thread: " +Thread.currentThread().getName()+" ALUGA server "+s.getId());
+                System.out.println("Nº de Alugados "+this.counterA);
+                
             }
             else {
-                System.out.println("Nº de Leiloados "+this.counterL);
                 this.counterL++;
+                System.out.println("Thread: " +Thread.currentThread().getName()+" LEILOA server "+s.getId());
+                System.out.println("Nº de Leiloados "+this.counterL);
             }
-            
             return id;
         } catch (InterruptedException ex) {
             System.err.println("Erro método alugaServer, classe Servidores" + ex.getMessage());
@@ -65,31 +72,6 @@ public class Servidores {
         }
         return id;
     }
-    
-    // é so chamado no alugaServer por isso não é necessário ter protecção para threads pois só acede 1 de cada vez
-    public synchronized boolean searchPos(){    
-        boolean flag = false;
-        if(!(this.servidores[this.proxPos].isLocked())) flag = true;
-        int i =0;
-        while(i<this.servidores.length && !flag){
-            if(!(this.servidores[this.proxPos].isLocked())) flag = true;
-            else if (this.proxPos==0) this.proxPos = this.servidores.length-1 ;
-            else this.proxPos--;
-            i++;
-        }
-        return flag;
-    }
-    
-    public synchronized void searchLeiloados(){
-        int i;
-        boolean flag = true;
-        for(i=0;i<this.servidores.length && flag ;i++){
-            if(this.servidores[this.proxPos].getTipoAluguer().equals("leilao")) flag = false;
-            else if(this.proxPos==0) this.proxPos = this.servidores.length-1 ;
-            else this.proxPos--;
-        }
-    }
-    
     
     public void libertaServidor(int i,String tipoAluguer){
         this.lockServidores.lock();
@@ -112,6 +94,47 @@ public class Servidores {
             this.lockServidores.unlock();
         }
     }
+    
+    
+    public synchronized Servidor getServidor(int id){
+        if (id>=0 && id<this.servidores.length) return this.servidores[id];
+        else return null;
+    }
+    
+    
+
+    public synchronized boolean searchPos(){    
+        boolean flag = false;
+        if(!(this.servidores[this.proxPos].isLocked())) flag = true;
+        int i =0;
+        while(i<this.servidores.length && !flag){
+            if(!(this.servidores[this.proxPos].isLocked())) flag = true;
+            else if (this.proxPos==0) this.proxPos = this.servidores.length-1 ;
+            else this.proxPos--;
+            i++;
+        }
+        return flag;
+    }
+    
+    public void cancelaLeilao(){
+       boolean flag = searchLeiloados();
+       libertaServidor(this.proxPos,"leilao");
+    }
+    
+    public synchronized boolean searchLeiloados(){
+        int i;
+        boolean flag = false;
+        int pos=-1;
+        for(i=0;i<this.servidores.length && !flag ;i++){
+            if(this.servidores[this.proxPos].getTipoAluguer().equals("leilao")) flag = true;
+            else if(this.proxPos==0) this.proxPos = this.servidores.length-1 ;
+            else this.proxPos--;
+        }
+        return flag;
+    }
+    
+    
+
     
     @Override
     public String toString(){

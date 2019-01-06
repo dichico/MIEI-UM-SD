@@ -17,37 +17,61 @@ import java.util.logging.Logger;
  * @author SarahTifanydaSilva
  */
 public class Leilao implements Serializable {
-    private HashMap<String,ObjectOutputStream> currentUsers;
-    private int idServer;
+    private HashMap<String,ObjectOutputStream> usersWriters;
+    private Servidor servidor;
     private String mailUser;
     private double custoMaior;
     private boolean terminado;              //Se for true posso comecar um novo leilao! Inicio timer
+
 
     
     public Leilao(){
         this.custoMaior = 0;
         this.mailUser ="";
-        this.currentUsers = new HashMap<>();
-        this.terminado = true;                 
+        this.usersWriters = new HashMap<>();
+        this.terminado = true;
+        this.servidor = null;
     }
     
-    public void setTerminado(boolean flag){
+    public synchronized void setTerminado(boolean flag){
         this.terminado=flag;
     }
     
+    public synchronized void setServidor(Servidor s){
+        this.servidor = s;
+    }
     
-    public synchronized void addUser(String mail, ObjectOutputStream out ){
-        this.currentUsers.put(mail,out);
+    public synchronized Servidor getIdServer(){
+        return this.servidor;
     }
     
     public synchronized boolean getTerminado(){
         return this.terminado;
+    }  
+       
+    public synchronized boolean getCanceladoServer(){
+        return this.servidor.getCancelado();
+    }
+    public synchronized void addUser(String mail, ObjectOutputStream out){
+        this.usersWriters.put(mail,out);
     }
     
+
     public synchronized void removeUser(String mail){
-        this.currentUsers.remove(mail);
+        this.usersWriters.remove(mail);
+        if (this.usersWriters.isEmpty()){
+            this.terminado = true;
+        }
     }
-   
+    
+    public synchronized boolean isWinner(String mail){
+        return this.mailUser.equals(mail);
+    }
+    
+    public double getCusto(){
+        return this.custoMaior;
+    }
+    
     /**
      * Eniva mensagens de texto para todos os users da rede
      * @param value 
@@ -55,15 +79,16 @@ public class Leilao implements Serializable {
     public synchronized void multicastWinner(){
         String value = "Parabéns! Conseguiu alugar o servidor por "+this.custoMaior+"€/hora";
 	try {
-            ObjectOutputStream bw = this.currentUsers.get(mailUser);
+            ObjectOutputStream bw = this.usersWriters.get(mailUser);
             bw.writeObject(value);
+            bw.writeObject(false);
             bw.flush();
         } catch (IOException e) {
             System.err.println("Erro método multicastMsg, classe Leilao " + e.getMessage());
         }
     }   
     
-    public synchronized void multicast(String value,String mail,boolean flag){
+    public synchronized void sendingMessage(String value,String mail,boolean flag,boolean flagTerminado){
         ObjectOutputStream bw;
         if (flag){
             double custoU = Double.parseDouble(value);
@@ -73,11 +98,11 @@ public class Leilao implements Serializable {
             }
         }
         try {
-            
-            for(String user : this.currentUsers.keySet()) {
+            for(String user : this.usersWriters.keySet()) {
                 if(!user.equals(mail)){
-                    bw = this.currentUsers.get(user);
+                    bw = this.usersWriters.get(user);
                     bw.writeObject(value);
+                    bw.writeObject(flagTerminado);
                     bw.flush();
                 }
             }
@@ -87,21 +112,39 @@ public class Leilao implements Serializable {
         }
     }
     
+    public synchronized void sendingMessage2(String value,boolean flagTerminado){
+        ObjectOutputStream bw;
+
+        try {
+            for(String user : this.usersWriters.keySet()) {
+
+                    bw = this.usersWriters.get(user);
+                    bw.writeObject(value);
+                    bw.writeObject(flagTerminado);
+                    bw.flush();
+            }
+        } catch (IOException ex) {
+            System.err.println("Erro método multicast, classe Leilao " + ex.getMessage());
+            Logger.getLogger(Leilao.class.getName()).log(Level.SEVERE, null, ex);   
+        }
+    }      
+    
+       
     public void terminaLeilao(){
-        if(!(this.currentUsers.isEmpty())){
+        if(!(this.usersWriters.isEmpty())){
             multicastWinner();
-            this.multicast("Leilão terminado! Não consegui alugar o servidor", mailUser, false);
-            this.multicast(null, "", false);
-            this.terminado = true;
+            this.sendingMessage("Leilão terminado! Não consegui alugar o servidor", mailUser, false,false);
+            this.sendingMessage2("quit",true);
         }
     }
     
     public String toString(){
         StringBuilder s = new StringBuilder("### LEILAO ###\n");
         s.append("Custo maior "+this.custoMaior+"\n");
-        s.append("Id do server "+this.idServer+"\n");
         s.append("Mail do user "+this.mailUser+"\n");
         s.append("Terminado ?"+this.terminado+"\n");
+        if (this.usersWriters.isEmpty()) s.append("Está vazio\n");
+        else s.append("Está cheio!");
         return s.toString();
     }
 }

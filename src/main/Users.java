@@ -16,34 +16,48 @@ public class Users {
      * Método que regista um User-
      * @param u User que pretende se registar.
      */
-    public synchronized void addUser(User u) {
+    public synchronized void addUser(String mail, String pass) {
+        User u = new User(mail,pass,0);
         this.users.put(u.getMail(), u);
     }
     
     /**
-     * Método que atualiza o saldo do useeer
+     * Método que retira o montante de uma conta
      * @param u 
      */
-    public void updateConta(String mail, double custo){
+    public synchronized void retiraConta(String mail, double montante){
         User u1 = this.users.get(mail);
-        u1.depositaSaldo(custo);
+        u1.retiraSaldo(montante);
     }
     
+    public synchronized void depositaConta(String mail, double custo){
+        User u = this.users.get(mail);
+        u.depositaSaldo(custo);
+    }
     
-    public boolean userExists(String mail){
+    public synchronized double getSaldo(String mail){
+        User u = this.getUser(mail);
+        return u.getSaldo();
+    }
+    public synchronized boolean userExists(String mail){
          return(this.users.containsKey(mail));
     }
     
-    public void setAtivo(String mail,boolean flag){
+    public synchronized void setAtivo(String mail,boolean flag){
         User u = this.users.get(mail);
         u.setAtivo(flag);
     }
     
-    // rever
+    
+    public synchronized boolean isAtivo(String mail){
+        User u = this.getUser(mail);
+        return u.getAtivo();
+    }
+    
     public synchronized boolean autentification(String pass, String mail) {
         if((this.users.containsKey(mail))){
             User u = this.users.get(mail);
-            if (!(u.getAtivo())){
+            if (!u.getAtivo()){
                 u.setAtivo(true);
                 return(u.autentification(pass));
             }
@@ -51,7 +65,7 @@ public class Users {
         return false;
     }
     
-    public User getUser(String mail){
+    public synchronized User getUser(String mail){
         User u =this.users.get(mail);
         return u;
     }

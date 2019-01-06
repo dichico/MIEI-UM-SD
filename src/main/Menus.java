@@ -5,8 +5,6 @@
  */
 package main;
 
-import principal_MESMO.*;
-
 /**
  *
  * @author SarahTifanydaSilva
@@ -25,7 +23,7 @@ public class Menus {
         System.out.println("2.Ir a leilão");
         System.out.println("3.Depositar dinheiro");
         System.out.println("4.Consultar conta");
-        System.out.println("5.SAIR");
+        System.out.println("5.Logout");
     }
     
     public static void presentigServers(){
@@ -37,4 +35,14 @@ public class Menus {
         System.out.println("4.SAIR");
     }
     
+    /**
+     * Método que arrendonda um numero para o numero de casa decimais pretendidos
+    */
+    public static double roundTo(double valueToRound, int numberOfDecimalPlaces)
+    {
+        double multipicationFactor = Math.pow(10, numberOfDecimalPlaces);
+        double interestedInZeroDPs = valueToRound * multipicationFactor;
+        return Math.round(interestedInZeroDPs) / multipicationFactor;
+    }
+
 }

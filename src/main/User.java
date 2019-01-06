@@ -24,12 +24,6 @@ public class User implements Serializable{
     }
     
     
-    public User(User user){
-        this.mail = user.getMail();
-        this.password = user.getPassword();
-        this.saldo = user.getSaldo();
-    }
-    
     // Getters
     public String getMail(){ 
         return this.mail;
@@ -59,13 +53,12 @@ public class User implements Serializable{
     public void setSaldo(double saldo){
         this.saldo = saldo;
     }
+    
 
     public void setAtivo(boolean flag){
         this.ativo = flag;
     }
     
-    //retira saldo
-    // caso custo a retirar seja maior que o saldo
     public void retiraSaldo(double custo){
         this.saldo -= custo;
     }
@@ -98,9 +91,4 @@ public class User implements Serializable{
         return ((this.mail.equals(a.getMail())) && (this.password.equals(a.getPassword())));
     }
     
-    //clone
-    public User clone(){
-        return new User(this);
-    }
-     
 }

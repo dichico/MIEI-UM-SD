@@ -10,12 +10,15 @@ public class Servidor implements Serializable {
     private double custoHora;
     private int id;
     private boolean lock;
+    private boolean cancelado;
+    
 
     public Servidor() {
         this.nome="";
         this.custoHora=0;
         this.id =0;
         this.lock = false;
+        this.cancelado = false;
     }
     
     public Servidor(String nome, double custoHora,int id){
@@ -62,6 +65,18 @@ public class Servidor implements Serializable {
    
     public boolean isLocked(){
         return (this.lock);
+    }
+    
+    public void cancelaServer(){
+        this.cancelado = true;
+    }
+    
+    public void setCancelado(boolean cancelado){
+        this.cancelado = cancelado;
+    }
+    
+    public boolean getCancelado(){
+        return this.cancelado;
     }
     
     public String toString(){

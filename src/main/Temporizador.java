@@ -33,4 +33,9 @@ public class Temporizador {
         };
        temporizador.schedule(timerTask,60000); 
     }
+    
+    public void terminar(){
+        this.temporizador.cancel();
+        this.temporizador.purge();
+    }
 }

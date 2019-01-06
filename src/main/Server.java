@@ -13,17 +13,21 @@ public class Server {
     private Servidores large;
     private Servidores normal;
     private Servidores micro;
-    private Leilao leilao;
+    private Leilao leilaoLarge;
+    private Leilao leilaoNormal;
+    private Leilao leilaoMicro;
 
     
     public Server(int port){
         this.port = port;
         this.users = new Users();
-        this.large = new Servidores(3);
-        this.normal = new Servidores(3);
-        this.micro = new Servidores(3);
-        this.leilao = new Leilao();
-        for(int i=0;i<3;i++){
+        this.large = new Servidores(2);
+        this.normal = new Servidores(2);
+        this.micro = new Servidores(2);
+        this.leilaoLarge = new Leilao();
+        this.leilaoNormal = new Leilao();
+        this.leilaoMicro = new Leilao();
+        for(int i=0;i<2;i++){
             Servidor s1 = new Servidor("m5.large",1,i);
             Servidor s2 = new Servidor("p4.normal",0.90,i);
             Servidor s3 = new Servidor("t3.micro",0.75,i);           
@@ -46,7 +50,7 @@ public class Server {
                 System.out.println("SERVER > Connection received!");
                 
                 
-                ServerWorker sw = new ServerWorker(socket,users,large,normal,micro,leilao);
+                ServerWorker sw = new ServerWorker(socket,users,large,normal,micro,leilaoLarge,leilaoNormal,leilaoMicro);
                 new Thread(sw).start();
             }
         } catch (IOException ex) {
