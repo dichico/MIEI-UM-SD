@@ -12,7 +12,7 @@ import java.util.logging.Logger;
 
 /**
  *
- * @author SarahTifanySilva
+ * @author 
  */
 public class Servidores {
     private Servidor[] servidores;              // Array com servidores para alugar e leiloar.

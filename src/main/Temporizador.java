@@ -10,7 +10,7 @@ import java.util.TimerTask;
 
 /**
  *
- * @author SarahTifanySilva
+ * @author 
  */
 public class Temporizador {
     private Leilao leilao;
