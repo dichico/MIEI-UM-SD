@@ -224,7 +224,7 @@ public class Client implements Serializable{
                 listener.start();
                 String msg;
                 String value = "ok";
-                System.out.println("Se pretender sair do leilao digit quit");
+                System.out.println("Entrou no leilao");
             
                 while(!value.equals("quit")){
                     System.out.print("> ");

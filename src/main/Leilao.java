@@ -14,7 +14,7 @@ import java.util.logging.Logger;
 
 /**
  *
- * @author SarahTifanydaSilva
+ * @author SarahTifanySilva
  */
 public class Leilao implements Serializable {
     private HashMap<String,ObjectOutputStream> usersWriters;
@@ -131,7 +131,7 @@ public class Leilao implements Serializable {
     public void terminaLeilao(){
         if(!(this.usersWriters.isEmpty())){
             multicastWinner();
-            this.sendingMessage("Leilão terminado! Não consegui alugar o servidor\nDigite quit!", mailUser, false,false);
+            this.sendingMessage("Leilão terminado! Não conseguiu alugar o servidor\nDigite quit!", mailUser, false,false);
             this.sendingMessage2("quit",true);
         }
     }

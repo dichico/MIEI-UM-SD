@@ -12,7 +12,7 @@ import java.util.logging.Logger;
 
 /**
  *
- * @author SarahTifanydaSilva
+ * @author SarahTifanySilva
  */
 public class Servidores {
     private Servidor[] servidores;              // Array com servidores para alugar e leiloar.
@@ -57,14 +57,14 @@ public class Servidores {
             
             if (tipoAluguer.equals("aluguer")){
                 this.counterA++;
-               System.out.println("Thread: " +Thread.currentThread().getName()+" ALUGA server "+s.getId());
-               System.out.println("Nº de Alugados "+this.counterA);
+              // System.out.println("Thread: " +Thread.currentThread().getName()+" ALUGA server "+s.getId());
+              // System.out.println("Nº de Alugados "+this.counterA);
                 
             }
             else {
                 this.counterL++;
-                System.out.println("Thread: " +Thread.currentThread().getName()+" LEILOA server "+s.getId());
-                System.out.println("Nº de Leiloados "+this.counterL);
+             //   System.out.println("Thread: " +Thread.currentThread().getName()+" LEILOA server "+s.getId());
+             //   System.out.println("Nº de Leiloados "+this.counterL);
             }
             return id;
         } catch (InterruptedException ex) {

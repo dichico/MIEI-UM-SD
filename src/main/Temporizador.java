@@ -10,7 +10,7 @@ import java.util.TimerTask;
 
 /**
  *
- * @author SarahTifanydaSilva
+ * @author SarahTifanySilva
  */
 public class Temporizador {
     private Leilao leilao;
@@ -27,7 +27,6 @@ public class Temporizador {
 
             @Override
             public void run() {
-                System.out.println("Terminado");
                 leilao.terminaLeilao();
             }
         };

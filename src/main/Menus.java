@@ -7,7 +7,7 @@ package main;
 
 /**
  *
- * @author SarahTifanydaSilva
+ * @author SarahTifanySilva
  */
 public class Menus {
      public static void mainMenu(){
